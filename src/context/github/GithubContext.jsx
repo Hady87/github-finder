@@ -10,7 +10,9 @@ const GITHUB_TOKEN= process.env.REACT_APP_GITHUB_TOKEN
 export const GithubProvider = ({ children }) => {
 const initialState={
 users:[],
-loiding:false
+loiding:false,
+repos:[],
+user:{},
 }
 const [state,dispatch] = useReducer(githubReducer,initialState)
 
@@ -32,6 +34,48 @@ const searchUsers = async (text) => {
       payload:items,
     })
   };
+  // Get a single user
+const getUser = async (login) => {
+  Setloiding()
+  
+  
+    const response = await fetch(`${GITHUB_URL}/user${login}`, {
+      headers: {
+        Authorization: `token ${GITHUB_TOKEN}`,
+      },
+    });
+    if(response.status===404){
+      window.Location='/notfound'
+    } 
+    else{
+const data = await response.json();
+    dispatch({
+      type:"GET_USER",
+      payload:data,
+    })
+    }
+    
+  };
+  // Get user repos
+  const getUserRepos = async (login) => {
+  Setloiding()
+  const params =new URLSearchParams({
+    sort:'created',
+    per_page:10,
+  })
+  
+  
+    const response = await fetch(`${GITHUB_URL}/users?${login}/repos?${params}`, {
+      headers: {
+        Authorization: `token ${GITHUB_TOKEN}`,
+      },
+    });
+    const data = await response.json();
+    dispatch({
+      type:"GET_REPOS",
+      payload:data,
+    })
+  };
   //clear users
   const clearUsers=()=>{
  
@@ -47,8 +91,12 @@ const searchUsers = async (text) => {
       value={{
         users:state.users,
         loiding:state.loiding,
+        user:state.user,
+        repos:state.repos,
         searchUsers,
         clearUsers,
+        getUser,
+        getUserRepos,
       }}
     >
       {children}
